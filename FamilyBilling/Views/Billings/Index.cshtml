@@ -1,7 +1,8 @@
 ﻿@model IEnumerable<FamilyBilling.Models.Billing>
+@using FamilyBilling.Helpers
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Billings";
 }
 
 <h2>Index</h2>
@@ -12,9 +13,6 @@
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.Person.Name)
-        </th>
-        <th>
             @Html.DisplayNameFor(model => model.Amount)
         </th>
         <th>
@@ -24,7 +22,10 @@
             @Html.DisplayNameFor(model => model.Comments)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.IncludePersonIDs)
+            Paid By
+        </th>
+        <th>
+            Include
         </th>
         <th></th>
     </tr>

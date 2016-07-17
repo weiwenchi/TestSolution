@@ -50,8 +50,7 @@
         <div class="form-group">
             @Html.LabelFor(model => model.IncludePersonIDs,"Include", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.EditorFor(model => model.IncludePersonIDs, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.IncludePersonIDs, "", new { @class = "text-danger" })
+                @Html.ListBox("IncludePersonIDs", ViewBag.IncludePersonIDs as MultiSelectList, new{@class = "chzn-select",data_placeholder = "Choose  People...", style = "width:350px" })
             </div>
         </div>
 

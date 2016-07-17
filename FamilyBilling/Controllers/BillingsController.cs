@@ -41,6 +41,7 @@ namespace FamilyBilling.Controllers
         public ActionResult Create()
         {
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name");
+            ViewBag.IncludePersonIDs = GetPeople("1,2".Split(','));
             return View();
         }
 
@@ -49,8 +50,9 @@ namespace FamilyBilling.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing)
+        public ActionResult Create([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
         {
+            billing.IncludePersonIDs= form["IncludePersonIDs"];
             if (ModelState.IsValid)
             {
                 db.Billings.Add(billing);
@@ -59,6 +61,7 @@ namespace FamilyBilling.Controllers
             }
 
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
+            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
             return View(billing);
         }
 
@@ -75,6 +78,7 @@ namespace FamilyBilling.Controllers
                 return HttpNotFound();
             }
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
+            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
             return View(billing);
         }
 
@@ -83,7 +87,7 @@ namespace FamilyBilling.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing)
+        public ActionResult Edit([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
         {
             if (ModelState.IsValid)
             {
@@ -92,6 +96,7 @@ namespace FamilyBilling.Controllers
                 return RedirectToAction("Index");
             }
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
+            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
             return View(billing);
         }
 
@@ -129,5 +134,12 @@ namespace FamilyBilling.Controllers
             }
             base.Dispose(disposing);
         }
+
+        private MultiSelectList GetPeople(string[] selectedValues)
+        {
+            var selectedpeople = db.People.Select(c =>c.PersonID);
+            return new MultiSelectList(db.People, "PersonID", "Name", selectedpeople);
+        }
+
     }
 }

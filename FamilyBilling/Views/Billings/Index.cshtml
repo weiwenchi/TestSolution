@@ -33,9 +33,6 @@
 @foreach (var item in Model) {
     <tr>
         <td>
-            @Html.DisplayFor(modelItem => item.Person.Name)
-        </td>
-        <td>
             @Html.DisplayFor(modelItem => item.Amount)
         </td>
         <td>
@@ -43,6 +40,9 @@
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.Comments)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Person.Name)
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.IncludePersonIDs)

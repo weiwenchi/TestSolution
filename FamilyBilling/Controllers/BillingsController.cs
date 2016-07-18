@@ -18,8 +18,20 @@ namespace FamilyBilling.Controllers
         // GET: Billings
         public ActionResult Index()
         {
-            var billings = db.Billings.Include(b => b.Person);
-            return View(billings.ToList());
+            var billings = db.Billings.Include(b => b.Person).ToList();
+            var people = db.People.ToList();
+            foreach (Billing iteam in billings)
+            {
+                iteam.Person= people.Where(p=>p.PersonID==iteam.PersonID).SingleOrDefault();
+                var ids = iteam.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+                foreach(int id in ids)
+                {
+                    iteam.IncludePersonName=iteam.IncludePersonName+ "," +people.Where(p=>p.PersonID==id).SingleOrDefault().Name;
+                }
+                iteam.IncludePersonName = iteam.IncludePersonName.Remove(0, 1);
+            }
+            
+            return View(billings);
         }
 
         // GET: Billings/Details/5
@@ -34,6 +46,13 @@ namespace FamilyBilling.Controllers
             {
                 return HttpNotFound();
             }
+            billing.Person = db.People.Where(p => p.PersonID == billing.PersonID).SingleOrDefault();
+            var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+            foreach (int personid in ids)
+            {
+                billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+            }
+            billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
             return View(billing);
         }
 
@@ -41,7 +60,7 @@ namespace FamilyBilling.Controllers
         public ActionResult Create()
         {
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name");
-            ViewBag.IncludePersonIDs = GetPeople("1,2".Split(','));
+            ViewBag.PeopleList = GetPeople(null);
             return View();
         }
 
@@ -52,7 +71,7 @@ namespace FamilyBilling.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
         {
-            billing.IncludePersonIDs= form["IncludePersonIDs"];
+            billing.IncludePersonIDs= form["IncludePeople"];
             if (ModelState.IsValid)
             {
                 db.Billings.Add(billing);
@@ -61,7 +80,14 @@ namespace FamilyBilling.Controllers
             }
 
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
-            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
+            if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+            {
+                ViewBag.PeopleList = GetPeople(null);
+            }
+            else
+            {
+                ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+            }
             return View(billing);
         }
 
@@ -78,7 +104,14 @@ namespace FamilyBilling.Controllers
                 return HttpNotFound();
             }
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
-            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
+            if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+            {
+                ViewBag.PeopleList = GetPeople(null);
+            }
+            else
+            {
+                ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+            }
             return View(billing);
         }
 
@@ -89,6 +122,7 @@ namespace FamilyBilling.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
         {
+            billing.IncludePersonIDs = form["IncludePeople"];
             if (ModelState.IsValid)
             {
                 db.Entry(billing).State = EntityState.Modified;
@@ -96,7 +130,14 @@ namespace FamilyBilling.Controllers
                 return RedirectToAction("Index");
             }
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
-            ViewBag.IncludePersonIDs = GetPeople(billing.IncludePersonIDs.Split(','));
+            if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+            {
+                ViewBag.PeopleList = GetPeople(null);
+            }
+            else
+            {
+                ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+            }
             return View(billing);
         }
 
@@ -112,6 +153,14 @@ namespace FamilyBilling.Controllers
             {
                 return HttpNotFound();
             }
+            billing.Person = db.People.Where(p => p.PersonID == billing.PersonID).SingleOrDefault();
+            var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+            foreach (int personid in ids)
+            {
+                billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+            }
+            billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
+           
             return View(billing);
         }
 
@@ -135,10 +184,14 @@ namespace FamilyBilling.Controllers
             base.Dispose(disposing);
         }
 
-        private MultiSelectList GetPeople(string[] selectedValues)
+        private MultiSelectList GetPeople(int[] selectedValues)
         {
-            var selectedpeople = db.People.Select(c =>c.PersonID);
-            return new MultiSelectList(db.People, "PersonID", "Name", selectedpeople);
+            if (selectedValues == null)
+            {
+                selectedValues = new[] { 1, 2, 3, 4 };
+            }
+
+            return new MultiSelectList(db.People, "PersonID", "Name", selectedValues);
         }
 
     }

@@ -50,7 +50,7 @@
         <div class="form-group">
             @Html.LabelFor(model => model.IncludePersonIDs,"Include", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.ListBox("IncludePersonIDs", ViewBag.IncludePersonIDs as MultiSelectList, new{@class = "chzn-select",data_placeholder = "Choose  People...", style = "width:350px" })
+                @Html.ListBox("IncludePeople", ViewBag.PeopleList as MultiSelectList, new{@class = "chzn-select",data_placeholder = "Choose  People...", style = "width:350px" })
             </div>
         </div>
 

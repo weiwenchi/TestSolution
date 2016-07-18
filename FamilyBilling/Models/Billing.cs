@@ -15,8 +15,10 @@ namespace FamilyBilling.Models
         public string Comments { get; set; }
         public int PersonID { get; set; }
         public string IncludePersonIDs { get; set; }
-
+        public string IncludePersonName { get; set; }
         public virtual Person Person
         { get; set; }
+
+        public List<Person> IncludePeople { get; set; }
     }
 }

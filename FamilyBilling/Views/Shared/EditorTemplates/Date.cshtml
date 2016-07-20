@@ -6,6 +6,6 @@
      dt = (System.DateTime)Model;
 
  }
-@Html.TextBox("", String.Format("{0:d}", dt.ToShortDateString()),
-  new { @class = "datefield", type = "date"  })
+@Html.TextBox("", String.Format("{0:yyyy-MM-dd}", dt.ToString("yyyy-MM-dd")),
+  new { @class = "datefield", type = "date"})
 }

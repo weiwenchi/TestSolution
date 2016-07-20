@@ -191,7 +191,15 @@ namespace FamilyBilling.Controllers
                 selectedValues = new[] { 1, 2, 3, 4 };
             }
 
-            return new MultiSelectList(db.People, "PersonID", "Name", selectedValues);
+            var FirstNullPerson = new Person { Name = "", PersonID = int.MinValue };
+            var people = new List<Person> { FirstNullPerson };
+
+            foreach (Person person in db.People)
+            {
+                people.Add(person);
+            }
+
+            return new MultiSelectList(people, "PersonID", "Name", selectedValues);
         }
 
     }

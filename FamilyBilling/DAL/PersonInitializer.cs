@@ -15,7 +15,7 @@ namespace FamilyBilling.DAL
             {
             new Person{Name="Gavin"},
             new Person{Name="Vania"},
-            new Person{Name="Marshal"},
+            new Person{Name="Marshall"},
             new Person{Name="Simon"}
             };
 

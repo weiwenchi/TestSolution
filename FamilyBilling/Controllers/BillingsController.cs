@@ -40,7 +40,7 @@ namespace FamilyBilling.Controllers
                 foreach (int id in ids)
                 {
                     item.IncludePersonName=item.IncludePersonName+ "," +people.Where(p=>p.PersonID==id).SingleOrDefault().Name;
-                    if (id == people.Where(p => p.Name == "Marshal").SingleOrDefault().PersonID)
+                    if (id == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
                     {
                         AmountMarshal += AmountEachPerson;
                     }
@@ -50,7 +50,7 @@ namespace FamilyBilling.Controllers
                     }
                 }
 
-                if (item.PersonID == people.Where(p => p.Name == "Marshal").SingleOrDefault().PersonID)
+                if (item.PersonID == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
                 {
                     AmountMarshal -= item.Amount;
                 }

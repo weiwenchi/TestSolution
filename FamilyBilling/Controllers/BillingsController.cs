@@ -16,21 +16,55 @@ namespace FamilyBilling.Controllers
         private BillingContext db = new BillingContext();
 
         // GET: Billings
-        public ActionResult Index()
+        public ActionResult Index(DateTime? StartDate, DateTime? EndDate)
         {
-            var billings = db.Billings.Include(b => b.Person).ToList();
-            var people = db.People.ToList();
-            foreach (Billing iteam in billings)
+            if (StartDate == null)
             {
-                iteam.Person= people.Where(p=>p.PersonID==iteam.PersonID).SingleOrDefault();
-                var ids = iteam.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
-                foreach(int id in ids)
-                {
-                    iteam.IncludePersonName=iteam.IncludePersonName+ "," +people.Where(p=>p.PersonID==id).SingleOrDefault().Name;
-                }
-                iteam.IncludePersonName = iteam.IncludePersonName.Remove(0, 1);
+                StartDate = DateTime.Today.Date;
             }
-            
+            if (EndDate == null)
+            {
+                EndDate = DateTime.Today.Date;
+            }
+            var billings = db.Billings.Include(b => b.Person).Where(b=> b.Date<=EndDate && b.Date>=StartDate).ToList();
+            var people = db.People.ToList();
+            float AmountMarshal = 0;
+            float AmountSimon = 0;
+            foreach (Billing item in billings)
+            {
+                item.Person= people.Where(p=>p.PersonID==item.PersonID).SingleOrDefault();
+                var ids = item.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+                int count = ids.Count();
+                float AmountEachPerson = item.Amount / count;
+
+                foreach (int id in ids)
+                {
+                    item.IncludePersonName=item.IncludePersonName+ "," +people.Where(p=>p.PersonID==id).SingleOrDefault().Name;
+                    if (id == people.Where(p => p.Name == "Marshal").SingleOrDefault().PersonID)
+                    {
+                        AmountMarshal += AmountEachPerson;
+                    }
+                    if (id == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
+                    {
+                        AmountSimon += AmountEachPerson;
+                    }
+                }
+
+                if (item.PersonID == people.Where(p => p.Name == "Marshal").SingleOrDefault().PersonID)
+                {
+                    AmountMarshal -= item.Amount;
+                }
+                if (item.PersonID == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
+                {
+                    AmountSimon -= item.Amount;
+                }
+                item.IncludePersonName = item.IncludePersonName.Remove(0, 1);
+
+            }
+            ViewBag.StartDate = StartDate;
+            ViewBag.EndDate = EndDate;
+            ViewBag.AmountM = AmountMarshal;
+            ViewBag.AmountS = AmountSimon;
             return View(billings);
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FamilyBilling.Models
 {
@@ -16,6 +17,7 @@ namespace FamilyBilling.Models
         public string Comments { get; set; }
         public int PersonID { get; set; }
         public string IncludePersonIDs { get; set; }
+        [NotMapped]
         public string IncludePersonName { get; set; }
         public virtual Person Person
         { get; set; }

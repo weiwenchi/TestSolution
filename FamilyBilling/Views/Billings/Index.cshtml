@@ -3,6 +3,10 @@
 
 @{
     ViewBag.Title = "Billings";
+    var StartDate = (DateTime)ViewBag.StartDate;
+    var EndDate = (DateTime)ViewBag.EndDate;
+    var AmountM = (float)ViewBag.AmountM;
+    var AmountS = (float)ViewBag.AmountS;
 }
 
 <h2>Index</h2>
@@ -10,6 +14,28 @@
 <p>
     @Html.ActionLink("Create New", "Create")
 </p>
+
+@using (Html.BeginForm())
+{
+    <p>
+        <dl>
+            <dt>
+                Start From
+            </dt>
+            <dd>
+                @Html.TextBox("StartDate", string.Format("{0:dd/MM/yyyy}", StartDate), new { htmlAttributes = new { @class = "form-control" } })
+            </dd>
+            <dt>
+                To
+            </dt>
+            <dd>
+                @Html.TextBox("EndDate", string.Format("{0:dd/MM/yyyy}", EndDate), new { htmlAttributes = new { @class = "form-control" } })
+            </dd>
+        </dl>
+        <input type="submit" value="Search" />
+    </p>
+}
+
 <table class="table">
     <tr>
         <th>
@@ -56,3 +82,20 @@
 }
 
 </table>
+
+<h4>Summary</h4>
+<hr />
+<dl>
+    <dt>
+        Marshal:@Html.Display("AmountM")
+    </dt>
+    <dd>
+        
+    </dd>
+    <dt>
+        Simon: @Html.Display("AmountS")
+    </dt>
+        
+    <dd>
+    </dd>
+</dl>

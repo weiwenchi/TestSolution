@@ -33,33 +33,35 @@ namespace FamilyBilling.Controllers
             foreach (Billing item in billings)
             {
                 item.Person= people.Where(p=>p.PersonID==item.PersonID).SingleOrDefault();
-                var ids = item.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
-                int count = ids.Count();
-                float AmountEachPerson = item.Amount / count;
-
-                foreach (int id in ids)
+                if (item.IncludePersonIDs != null)
                 {
-                    item.IncludePersonName=item.IncludePersonName+ "," +people.Where(p=>p.PersonID==id).SingleOrDefault().Name;
-                    if (id == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
+                    var ids = item.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+                    int count = ids.Count();
+                    float AmountEachPerson = item.Amount / count;
+
+                    foreach (int id in ids)
                     {
-                        AmountMarshal += AmountEachPerson;
+                        item.IncludePersonName = item.IncludePersonName + "," + people.Where(p => p.PersonID == id).SingleOrDefault().Name;
+                        if (id == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
+                        {
+                            AmountMarshal += AmountEachPerson;
+                        }
+                        if (id == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
+                        {
+                            AmountSimon += AmountEachPerson;
+                        }
                     }
-                    if (id == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
+
+                    if (item.PersonID == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
                     {
-                        AmountSimon += AmountEachPerson;
+                        AmountMarshal -= item.Amount;
                     }
+                    if (item.PersonID == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
+                    {
+                        AmountSimon -= item.Amount;
+                    }
+                    item.IncludePersonName = item.IncludePersonName.Remove(0, 1);
                 }
-
-                if (item.PersonID == people.Where(p => p.Name == "Marshall").SingleOrDefault().PersonID)
-                {
-                    AmountMarshal -= item.Amount;
-                }
-                if (item.PersonID == people.Where(p => p.Name == "Simon").SingleOrDefault().PersonID)
-                {
-                    AmountSimon -= item.Amount;
-                }
-                item.IncludePersonName = item.IncludePersonName.Remove(0, 1);
-
             }
             ViewBag.StartDate = StartDate;
             ViewBag.EndDate = EndDate;
@@ -81,20 +83,32 @@ namespace FamilyBilling.Controllers
                 return HttpNotFound();
             }
             billing.Person = db.People.Where(p => p.PersonID == billing.PersonID).SingleOrDefault();
-            var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
-            foreach (int personid in ids)
+            if (billing.IncludePersonIDs != null)
             {
-                billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+                var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+                foreach (int personid in ids)
+                {
+                    billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+                }
+                billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
             }
-            billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
             return View(billing);
         }
 
         // GET: Billings/Create
-        public ActionResult Create()
+        public ActionResult Create(bool? SelectAll)
         {
             ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name");
-            ViewBag.PeopleList = GetPeople(null);
+            if (SelectAll.GetValueOrDefault())
+            {
+                var selectedValues = new[] { 1, 2, 3, 4 };
+                ViewBag.PeopleList = GetPeople(selectedValues);
+            }
+            else
+            {
+                ViewBag.PeopleList = GetPeople(null);
+            }
+            ViewBag.SelectAll = SelectAll.GetValueOrDefault();
             return View();
         }
 
@@ -103,30 +117,55 @@ namespace FamilyBilling.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
+        public ActionResult Create([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form, bool? SelectAll, string Create)
         {
-            billing.IncludePersonIDs= form["IncludePeople"];
-            if (ModelState.IsValid)
+            if (Create != null)
             {
-                db.Billings.Add(billing);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                billing.IncludePersonIDs = form["IncludePeople"];
+                if (ModelState.IsValid)
+                {
+                    db.Billings.Add(billing);
+                    db.SaveChanges();
+                    return RedirectToAction("Index");
+                }
 
-            ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
-            if (String.IsNullOrEmpty(billing.IncludePersonIDs))
-            {
-                ViewBag.PeopleList = GetPeople(null);
+                ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
+                if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+                {
+                    ViewBag.PeopleList = GetPeople(null);
+                }
+                else
+                {
+                    ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                }
+                return View(billing);
             }
             else
             {
-                ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name");
+                if (SelectAll.GetValueOrDefault())
+                {
+                    var selectedValues = new[] { 1, 2, 3, 4 };
+                    ViewBag.PeopleList = GetPeople(selectedValues);
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+                    {
+                        ViewBag.PeopleList = GetPeople(null);
+                    }
+                    else
+                    {
+                        ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                    }
+                }
+                ViewBag.SelectAll = SelectAll.GetValueOrDefault();
+                return View();
             }
-            return View(billing);
         }
 
         // GET: Billings/Edit/5
-        public ActionResult Edit(int? id)
+        public ActionResult Edit(int? id, bool? SelectAll)
         {
             if (id == null)
             {
@@ -146,6 +185,7 @@ namespace FamilyBilling.Controllers
             {
                 ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
             }
+            ViewBag.SelectAll = SelectAll.GetValueOrDefault();
             return View(billing);
         }
 
@@ -154,25 +194,51 @@ namespace FamilyBilling.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form)
+        public ActionResult Edit([Bind(Include = "BillingID,Amount,Date,Comments,PersonID,IncludePersonIDs")] Billing billing, FormCollection form, bool? SelectAll, string Save)
         {
-            billing.IncludePersonIDs = form["IncludePeople"];
-            if (ModelState.IsValid)
+            int id = billing.BillingID;
+            if (Save != null)
             {
-                db.Entry(billing).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
-            if (String.IsNullOrEmpty(billing.IncludePersonIDs))
-            {
-                ViewBag.PeopleList = GetPeople(null);
+                billing.IncludePersonIDs = form["IncludePeople"];
+                if (ModelState.IsValid)
+                {
+                    db.Entry(billing).State = EntityState.Modified;
+                    db.SaveChanges();
+                    return RedirectToAction("Index");
+                }
+                ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name", billing.PersonID);
+                if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+                {
+                    ViewBag.PeopleList = GetPeople(null);
+                }
+                else
+                {
+                    ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                }
+                return View(billing);
             }
             else
             {
-                ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                ViewBag.PersonID = new SelectList(db.People, "PersonID", "Name");
+                if (SelectAll.GetValueOrDefault())
+                {
+                    var selectedValues = new[] { 1, 2, 3, 4 };
+                    ViewBag.PeopleList = GetPeople(selectedValues);
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(billing.IncludePersonIDs))
+                    {
+                        ViewBag.PeopleList = GetPeople(null);
+                    }
+                    else
+                    {
+                        ViewBag.PeopleList = GetPeople(billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray());
+                    }
+                }
+                ViewBag.SelectAll = SelectAll.GetValueOrDefault();
+                return View(billing);
             }
-            return View(billing);
         }
 
         // GET: Billings/Delete/5
@@ -188,13 +254,15 @@ namespace FamilyBilling.Controllers
                 return HttpNotFound();
             }
             billing.Person = db.People.Where(p => p.PersonID == billing.PersonID).SingleOrDefault();
-            var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
-            foreach (int personid in ids)
+            if (billing.IncludePersonIDs != null)
             {
-                billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+                var ids = billing.IncludePersonIDs.Split(',').Select(int.Parse).ToArray();
+                foreach (int personid in ids)
+                {
+                    billing.IncludePersonName = billing.IncludePersonName + "," + db.People.Where(p => p.PersonID == personid).SingleOrDefault().Name;
+                }
+                billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
             }
-            billing.IncludePersonName = billing.IncludePersonName.Remove(0, 1);
-           
             return View(billing);
         }
 
@@ -220,18 +288,8 @@ namespace FamilyBilling.Controllers
 
         private MultiSelectList GetPeople(int[] selectedValues)
         {
-            if (selectedValues == null)
-            {
-                selectedValues = new[] { 1, 2, 3, 4 };
-            }
-
             var FirstNullPerson = new Person { Name = "", PersonID = int.MinValue };
-            var people = new List<Person> { FirstNullPerson };
-
-            foreach (Person person in db.People)
-            {
-                people.Add(person);
-            }
+            var people = db.People.ToList();
 
             return new MultiSelectList(people, "PersonID", "Name", selectedValues);
         }

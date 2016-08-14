@@ -2,6 +2,7 @@
 
 @{
     ViewBag.Title = "Create";
+    var SelectAll = (Boolean?)ViewBag.SelectAll;
 }
 
 <h2>Create</h2>
@@ -46,17 +47,31 @@
                 @Html.ValidationMessageFor(model => model.PersonID, "", new { @class = "text-danger" })
             </div>
         </div>
-
+        <div class="form-group">
+            <div class="control-label col-md-2">
+                <p><b>Select All</b></p>
+            </div>
+            <div class="col-md-10" >
+                @Html.CheckBox("SelectAll",SelectAll.GetValueOrDefault(), new {onclick = "this.form.submit();" })
+            </div>
+        </div>
         <div class="form-group">
             @Html.LabelFor(model => model.IncludePersonIDs,"Include", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.ListBox("IncludePeople", ViewBag.PeopleList as MultiSelectList, new{@class = "chzn-select",data_placeholder = "Choose  People...", style = "width:350px" })
+                @if (SelectAll.GetValueOrDefault())
+                {
+                    @Html.ListBox("IncludePeople", ViewBag.PeopleList as MultiSelectList, new { @class = "chzn-select", data_placeholder = "Choose  People...", style = "width:350px",disabled="disabled" })
+                }
+                else
+                {
+                    @Html.ListBox("IncludePeople", ViewBag.PeopleList as MultiSelectList, new { @class = "chzn-select", data_placeholder = "Choose  People...", style = "width:350px" })
+                }
             </div>
         </div>
 
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Create" class="btn btn-default" />
+                <input type="submit" name="Create" value="Create" class="btn btn-default" />
             </div>
         </div>
     </div>
